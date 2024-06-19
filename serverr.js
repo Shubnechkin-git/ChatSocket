@@ -8,6 +8,26 @@ const io = require("socket.io")(http, {
   },
 });
 
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// Access your API key as an environment variable.
+const genAI = new GoogleGenerativeAI("AIzaSyB62pmxP_NUEHMNAziX7qC_gHgc763q_Ho");
+
+async function run(prompt) {
+  // Choose a model that's appropriate for your use case.
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const result = await model.generateContent(prompt);
+    const response = result.response;
+    const text = response.text();
+    console.log(text);
+    return text;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 app.use(express.static("./")); // Сервировка статических файлов
 
 app.get("/", (req, res) => {
@@ -41,6 +61,7 @@ try {
 
       socket.on("chat message", (msg) => {
         console.log("Сообщение:", msg);
+        run(msg);
         messages.push({ username: username, message: msg }); // Добавление сообщения с именем
         io.emit("chat message", { username: username, message: msg });
       });
