@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Чат</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const socket = io('http://localhost:3000');
+
+            const messageForm = document.getElementById('messageForm');
+            const messageInput = document.getElementById('messageInput');
+            const messagesList = document.getElementById('messagesList');
+
+            messageForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const msg = messageInput.value;
+                socket.emit('chat message', msg);
+                messageInput.value = ''; // Очистка поля ввода
+            });
+            // Обработка получения истории сообщений
+            socket.on('request username', () => {
+                socket.emit('username');
+            });
+
+            socket.on('chat history', (history) => {
+                history.forEach(msg => {
+                    const li = document.createElement('li');
+                    li.textContent = `${msg.username}: ${msg.message}`;
+                    messagesList.appendChild(li);
+                });
+                messageForm.style.display = 'block'; // Показать форму после получения истории
+            });
+
+            socket.on('chat message', (msg) => {
+                const li = document.createElement('li');
+                li.textContent = `${msg.username}: ${msg.message}`;
+                messagesList.appendChild(li);
+            });
+
+            socket.on('user joined', (username) => {
+                const li = document.createElement('li');
+                li.textContent = `${username} подключился к чату.`;
+                messagesList.appendChild(li);
+            });
+
+            socket.on('user left', (username) => {
+                const li = document.createElement('li');
+                li.textContent = `${username} вышел из чата.`;
+                messagesList.appendChild(li);
+            });
+        })
+    </script>
+</head>
+
+<body>
+    <h1>Чат</h1>
+    <ul id="messagesList"></ul>
+    <form id="messageForm">
+        <input id="messageInput" type="text" placeholder="Введите сообщение">
+        <button type="submit">Отправить</button>
+    </form>
+</body>
+
+</html>
